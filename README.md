@@ -34,26 +34,24 @@ AI lookup uses the OpenAI API from a small server running on your computer. It r
    ```
 
 3. Open `.env.server` in your editor and enter your key after `AI_API_KEY=`. Save the file. Keep the key in this local file; do not paste it into chat or commit it to GitHub.
-4. Start the AI server:
-
-   ```sh
-   npm run server
-   ```
-
-Leave this Terminal window open. The server reads `.env.server`, which is ignored by Git. Restart the server if you change its settings. It uses `gpt-4.1-mini` by default; `AI_MODEL` can select another compatible model. An existing `OPENAI_API_KEY` server environment variable is also supported when `AI_API_KEY` is absent.
+The server reads `.env.server`, which is ignored by Git. Restart the app if you change its settings. It uses `gpt-4.1-mini` by default; `AI_MODEL` can select another compatible model. An existing `OPENAI_API_KEY` server environment variable is also supported when `AI_API_KEY` is absent.
 
 The API key stays on the server. Never put it in an `EXPO_PUBLIC_` variable: those values are included in the browser and mobile app.
 
 ## Open the web app
 
-With the AI server still running, open a second Terminal window and run:
+In Terminal, run:
 
 ```sh
 cd ~/ideabank
 npm run web
 ```
 
-Expo opens your browser; press **w** in the Expo terminal if it does not. Search for a meal and press **Generate grocery list**. The browser app connects to the AI server on the same computer at port 3001. Both terminal windows must stay open while you use AI lookup.
+This starts both the AI server and Expo. It reuses a healthy AI server if one is already running. Expo opens your browser; press **w** in the Expo terminal if it does not. Search for a meal and press **Generate grocery list**. Keep this Terminal window open. Press **Ctrl+C** to stop the processes started by this command.
+
+The web launcher uses a local API at port 3001 and sets the browser's API address automatically. It keeps API keys out of the Expo process. It prints a setup message if the server is reachable but no API key is configured. `API_PORT` can override the local port when exported in your Terminal; `API_HOST` and `API_PORT` in `.env.server` remain available for the standalone/mobile server.
+
+If you see **Could not connect to AI lookup**, stop Expo with **Ctrl+C**, update with `git pull`, and run `npm run web` again. If startup fails, share the error from that Terminal, without any API keys. The React DevTools information message is normal and does not indicate an AI connection.
 
 For a built website served by the same server, stop the development processes and run:
 
@@ -74,7 +72,7 @@ The phone needs your computer's local network IP address to reach the AI server.
 cp .env.example .env.local
 ```
 
-In `.env.server`, set `API_HOST=0.0.0.0` so the AI server accepts connections from your local network. Restart it with `npm run server`. In a second Terminal window, run:
+In `.env.server`, set `API_HOST=0.0.0.0` so the AI server accepts connections from your local network. Start it separately with `npm run server` (the web launcher deliberately keeps its own server local). In a second Terminal window, run:
 
 ```sh
 npm start

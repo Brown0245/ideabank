@@ -1,7 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateMeal, restoreGeneratedRecipes } from './meal-api.mjs';
+import { generateMeal, mealServiceUrl, restoreGeneratedRecipes } from './meal-api.mjs';
 import { groceryList, recipes } from './recipes.js';
+
+test('web development uses the IPv4 API while exports and mobile keep their own routes', () => {
+  const location = { protocol: 'http:', hostname: 'localhost', origin: 'http://localhost:3001' };
+  assert.equal(mealServiceUrl({ platform: 'web', development: true, location }), 'http://127.0.0.1:3001');
+  assert.equal(mealServiceUrl({ platform: 'web', development: false, location }), location.origin);
+  assert.equal(mealServiceUrl({ platform: 'ios' }), undefined);
+  assert.equal(mealServiceUrl({ platform: 'android', configuredUrl: ' https://example.com ' }), 'https://example.com');
+});
 
 test('AI meal request uses the backend and merges ingredients with selected meals', async () => {
   const recipe = await generateMeal(' Jollof rice ', { baseUrl: 'http://meal-service/', fetchImpl: async (url, options) => {

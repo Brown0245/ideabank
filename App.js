@@ -3,7 +3,7 @@ import { Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, SafeAreaVie
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { groceryList, recipes } from './recipes';
-import { generateMeal, restoreGeneratedRecipes } from './meal-api.mjs';
+import { generateMeal, mealServiceUrl, restoreGeneratedRecipes } from './meal-api.mjs';
 
 const key = 'menu-planner-v1';
 export default function App() {
@@ -40,10 +40,12 @@ export default function App() {
     setGenerating(true);
     setAiError('');
     setNotice('');
-    let baseUrl = process.env.EXPO_PUBLIC_API_URL;
-    if (!baseUrl && Platform.OS === 'web') {
-      baseUrl = __DEV__ ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin;
-    }
+    const baseUrl = mealServiceUrl({
+      configuredUrl: process.env.EXPO_PUBLIC_API_URL,
+      platform: Platform.OS,
+      development: __DEV__,
+      location: Platform.OS === 'web' ? window.location : undefined,
+    });
     try {
       const recipe = await generateMeal(query, { baseUrl });
       setGenerated(current => ({ ...current, [recipe.name]: recipe.ingredients }));
@@ -51,7 +53,11 @@ export default function App() {
       setNotice(`Added ${recipe.name}. Review the AI-suggested ingredients below.`);
       setQuery('');
       setTab('Groceries');
-    } catch (error) { setAiError(error.message || 'Could not generate this meal. Please try again.'); }
+    } catch (error) {
+      setAiError(error.code === 'AI_CONNECTION_FAILED' && Platform.OS === 'web'
+        ? 'AI lookup is offline. In Terminal, stop the app with Ctrl+C and restart it with npm run web. Keep that Terminal window open.'
+        : error.message || 'Could not generate this meal. Please try again.');
+    }
     finally { setGenerating(false); }
   }
   function toggleDish(name) {

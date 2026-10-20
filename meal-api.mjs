@@ -1,3 +1,12 @@
+export function mealServiceUrl({ configuredUrl, platform, development, location }) {
+  if (configuredUrl?.trim()) return configuredUrl.trim();
+  if (platform !== 'web' || !location) return undefined;
+  if (!development) return location.origin;
+  // The local API binds IPv4; avoid browsers resolving localhost to IPv6 only.
+  const host = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) ? '127.0.0.1' : location.hostname;
+  return `${location.protocol}//${host}:3001`;
+}
+
 export function validateRecipe(value) {
   if (!value || typeof value.name !== 'string' || !value.name.trim() || value.name.length > 160
     || !Array.isArray(value.ingredients) || value.ingredients.length < 1 || value.ingredients.length > 50
@@ -45,7 +54,11 @@ export async function generateMeal(meal, { baseUrl, fetchImpl = fetch, timeoutMs
     return validateRecipe(data);
   } catch (error) {
     if (controller.signal.aborted) throw new Error('The meal lookup took too long. Please try again.');
-    if (error instanceof TypeError) throw new Error('Could not connect to AI lookup. Check your connection and that the meal service is running.');
+    if (error instanceof TypeError) {
+      const connectionError = new Error('Could not connect to AI lookup. Check your connection and that the meal service is running.');
+      connectionError.code = 'AI_CONNECTION_FAILED';
+      throw connectionError;
+    }
     throw error;
   } finally { clearTimeout(timer); }
 }
