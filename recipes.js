@@ -22,6 +22,6 @@ export const recipes = {
       'Lentil soup': ['lentils', 'vegetable broth', 'carrots', 'celery', 'onions', 'garlic', 'canned tomatoes']
     };
 
-export function groceryList(dishes, extras = "") {
-  return [...new Set([...dishes.flatMap(name => recipes[name] || []), ...extras.split(/[,\n]/).map(s => s.trim().toLowerCase()).filter(Boolean)])].sort();
+export function groceryList(dishes, extras = "", availableRecipes = recipes) {
+  return [...new Set([...dishes.flatMap(name => Object.hasOwn(availableRecipes, name) ? availableRecipes[name] : []), ...extras.split(/[,\n]/).map(s => s.trim().toLowerCase()).filter(Boolean)])].sort();
 }
